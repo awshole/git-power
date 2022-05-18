@@ -1031,3 +1031,49 @@ function Get-GitHubUserRepositoryForks {
     } until ($return.Count -lt 100)
     $forks
 }
+
+function Get-WorkflowsFromGitHubRepositoryForks {
+    [CmdletBinding()]
+    Param
+    (
+        [Parameter(Mandatory = $True)] [string] $gitHubRepository,
+        [Parameter(Mandatory = $False)] [string] $gitHubToken
+    )
+
+    $splat = @{
+        user = $gitHubRepository.Split('/')[0]
+        repository = $gitHubRepository.Split('/')[-1]
+        token = $gitHubToken
+    }
+    $forks = Get-GitHubUserRepositoryForks @splat
+    foreach ($fork in $forks) {
+        $splat = @{
+            user = $fork.full_name.Split('/')[0]
+            repository = $fork.full_name.Split('/')[-1]
+            token = $gitHubToken
+        }
+        $repository = Get-GitHubUserRepository @splat
+        if ($null -ne $repository.default_branch) {
+            $splat = @{
+                gitHubRepository = $fork.full_name
+                path = '.github/workflows'
+                branch = $repository.default_branch
+                gitHubToken = $gitHubToken
+                WarningAction = 'SilentlyContinue'
+            }
+            $workflows = Get-GitHubRepositoryFileContent @splat
+            if ($null -ne $workflows) {
+                foreach ($workflow in $workflows) {
+                    $splat = @{
+                        gitHubRepository = $fork.full_name
+                        path = $workflow.path
+                        branch = $repository.default_branch
+                        gitHubToken = $gitHubToken
+                    }
+                    $fileData = Get-GitHubRepositoryFileContent @splat
+                    [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($fileData.content)) | Out-File -FilePath "$($fork.owner.login) $($workflow.path.Split('/')[-1])" -Force
+                }
+            }
+        }
+    }
+}
