@@ -981,3 +981,47 @@ function Get-GitHubPullRequest {
     }
     Invoke-RestMethod @splat
 }
+
+function Get-GitHubUserRepository {
+    [CmdletBinding()]
+    Param
+    (
+        [Parameter(Mandatory = $False)] [string] $token,
+        [Parameter(Mandatory = $True)] [string] $user,
+        [Parameter(Mandatory = $True)] [string] $repository
+    )
+
+    $base64Token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$($token)"))
+    $headers = @{'Authorization' = "Basic $base64Token"}
+    $uri = "https://api.github.com/repos/$user/$repository"
+    $uri = [uri]::EscapeUriString($uri)
+    $splat = @{
+        Method = 'Get'
+        Uri = $uri
+        Headers = $headers
+        ContentType = 'application/json'
+    }
+    Invoke-RestMethod @splat
+}
+
+function Get-GitHubUserRepositoryForks {
+    [CmdletBinding()]
+    Param
+    (
+        [Parameter(Mandatory = $False)] [string] $token,
+        [Parameter(Mandatory = $True)] [string] $user,
+        [Parameter(Mandatory = $True)] [string] $repository
+    )
+
+    $base64Token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$($token)"))
+    $headers = @{'Authorization' = "Basic $base64Token"}
+    $uri = "https://api.github.com/repos/$user/$repository/forks"
+    $uri = [uri]::EscapeUriString($uri)
+    $splat = @{
+        Method = 'Get'
+        Uri = $uri
+        Headers = $headers
+        ContentType = 'application/json'
+    }
+    Invoke-RestMethod @splat
+}
