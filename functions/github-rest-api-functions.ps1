@@ -479,6 +479,7 @@ function Get-GitHubRepositoryCodeScanningAlerts {
             Headers = $headers 
             ContentType = 'application/json'
         }
+        $alertsUri
         [array]$returnAlerts = Invoke-RestMethod @splat
         [array]$allAlerts += $returnAlerts
         $page++
