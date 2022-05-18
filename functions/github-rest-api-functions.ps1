@@ -471,17 +471,23 @@ function Get-GitHubRepositoryCodeScanningAlerts {
     }
     $page = 1
     do {
-        $alertsUri = "$baseUri&$page&per_page=100"
-        $alertsUri = [uri]::EscapeUriString($alertsUri)
-        $splat = @{
-            Method = 'Get' 
-            Uri = $alertsUri 
-            Headers = $headers 
-            ContentType = 'application/json'
+        try {
+            $alertsUri = "$baseUri&$page&per_page=100"
+            $alertsUri = [uri]::EscapeUriString($alertsUri)
+            $splat = @{
+                Method = 'Get' 
+                Uri = $alertsUri 
+                Headers = $headers 
+                ContentType = 'application/json'
+            }
+            [array]$returnAlerts = Invoke-RestMethod @splat
+            [array]$allAlerts += $returnAlerts
+            $page++
         }
-        [array]$returnAlerts = Invoke-RestMethod @splat
-        [array]$allAlerts += $returnAlerts
-        $page++
+        catch {
+            $splat
+            $alertsUri
+        }
     } until ($returnAlerts.Count -lt 100)
     $allAlerts
 }
