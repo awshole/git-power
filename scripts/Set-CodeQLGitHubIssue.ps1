@@ -86,7 +86,6 @@ $splat = @{
     repositoryName = $gitHubRepositoryName
     branchName = $gitHubRepositoryBranchName
 }
-$splat
 [array]$codeScanningIssues = Get-GitHubRepositoryCodeScanningAlerts @splat | Where-Object {$_.state -like 'open'}
 if ($codeScanningIssues.Count -gt 0) {
     [array]$codeQLIssues = $codeScanningIssues | Where-Object {$_.tool.name -like 'CodeQL' -and $_.state -like 'open'} | Select-Object -Property rule -ExpandProperty most_recent_instance
