@@ -459,19 +459,13 @@ function Get-GitHubRepositoryCodeScanningAlerts {
         [Parameter(Mandatory = $True)] [string] $gitHubToken,
         [Parameter(Mandatory = $True)] [string] $owner,
         [Parameter(Mandatory = $True)] [string] $repositoryName,
-        [Parameter(Mandatory = $False)] [string] $branchName,
-        [Parameter(Mandatory = $False)] [string] $pullNumber
+        [Parameter(Mandatory = $False)] [string] $branchName
     )
     $base64Token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$($gitHubToken)"))
     $headers = @{'Authorization' = "Basic $base64Token"}
-    if ($PSBoundParameters.ContainsKey($branchName)) {
-        $baseUri = "https://api.github.com/repos/$owner/$repositoryName/code-scanning/alerts?ref=refs/heads/$branchName"    
-    } elseif ($PSBoundParameters.ContainsKey($pullNumber)) {
-        $baseUri = "https://api.github.com/repos/$owner/$repositoryName/code-scanning/alerts?refs/pull/$pullNumber/merge"    
-    }
     $page = 1
     do {
-        $alertsUri = "$baseUri&$page&per_page=100"
+        $alertsUri = "https://api.github.com/repos/$owner/$repositoryName/code-scanning/alerts?ref=refs/heads/$branchName&$page&per_page=100"
         $alertsUri = [uri]::EscapeUriString($alertsUri)
         $splat = @{
             Method = 'Get' 
@@ -479,7 +473,6 @@ function Get-GitHubRepositoryCodeScanningAlerts {
             Headers = $headers 
             ContentType = 'application/json'
         }
-        $alertsUri
         [array]$returnAlerts = Invoke-RestMethod @splat
         [array]$allAlerts += $returnAlerts
         $page++
