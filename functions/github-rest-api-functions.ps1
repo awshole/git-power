@@ -1015,13 +1015,19 @@ function Get-GitHubUserRepositoryForks {
 
     $base64Token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$($token)"))
     $headers = @{'Authorization' = "Basic $base64Token"}
-    $uri = "https://api.github.com/repos/$user/$repository/forks"
-    $uri = [uri]::EscapeUriString($uri)
-    $splat = @{
-        Method = 'Get'
-        Uri = $uri
-        Headers = $headers
-        ContentType = 'application/json'
-    }
-    Invoke-RestMethod @splat
+    $page = 0
+    do {
+        $uri = "https://api.github.com/repos/$user/$repository/forks?page=$page&per_page=100"
+        $uri = [uri]::EscapeUriString($uri)
+        $splat = @{
+            Method = 'Get'
+            Uri = $uri
+            Headers = $headers
+            ContentType = 'application/json'
+        }
+        [array]$return = Invoke-RestMethod @splat
+        [array]$forks += $return
+        $page ++
+    } until ($return.Count -lt 100)
+    $forks
 }
